@@ -1,4 +1,3 @@
-// Programa sequencial
 // Converte grafo direcionado do formato de matriz de adjacências para lista de arestas
 // Compilar com: gcc converte_seq.c -fopenmp -o converte_seq -Wall
 // Executar por linha de comando: ./converte_seq arquivo_entrada arquivo_saída
@@ -42,6 +41,8 @@ void inicializa(char* nome_arq_entrada)
             fscanf(arq_entrada, "%d", &(matAdj[i][j]));
 
 	fclose(arq_entrada);
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -51,6 +52,8 @@ void aloca_arestas()
 	arestas = (int**) malloc(nArestas * sizeof(int*));
     for (int i = 0; i < nArestas; i++)
         arestas[i] = (int*) malloc(2 * sizeof(int));
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -64,6 +67,8 @@ void conta_arestas()
 			if (matAdj[i][j] != 0){
 				nArestas++;
 			}
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -81,6 +86,8 @@ void converte()
 				k++;
 				}
 			}
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -108,6 +115,8 @@ void finaliza(char* nome_arq_saida)
 	for (int i = 0; i < nVertices; i++)
         free(matAdj[i]);
     free(matAdj);
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -135,8 +144,9 @@ int main(int argc, char** argv)
 	// Determina número de arestas do grafo, a partir da matriz de adjacências
 	conta_arestas();
 
-	double tfin = omp_get_wtime();
-	double tempo1 = tfin - tini;
+	//double tfin = omp_get_wtime();
+
+	// double tempo1 = tfin - tini;
 
 	// Aloca lista de arestas
 	aloca_arestas();
