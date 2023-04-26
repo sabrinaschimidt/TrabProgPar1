@@ -46,7 +46,8 @@ void inicializa(char* nome_arq_entrada)
 }
 
 // ----------------------------------------------------------------------------
-void aloca_arestas()
+
+/* void aloca_arestas()
 {
 	// Aloca lista de arestas (*** checar se conseguiu alocar)
 	arestas = (int**) malloc(nArestas * sizeof(int*));
@@ -54,6 +55,17 @@ void aloca_arestas()
         arestas[i] = (int*) malloc(2 * sizeof(int));
 
     return;
+}
+*/
+
+int** aloca_arestas(int nArestas)
+{
+	// Aloca lista de arestas (*** checar se conseguiu alocar)
+	arestas = (int**) calloc(nArestas, sizeof(int*));
+    for (int i = 0; i < nArestas; i++)
+        arestas[i] = (int*) calloc(2, sizeof(int));
+
+    return arestas;
 }
 
 // ----------------------------------------------------------------------------
@@ -72,7 +84,7 @@ void conta_arestas()
 }
 
 // ----------------------------------------------------------------------------
-void converte()
+/* void converte()
 {
 	int k = 0;	// Inicialmente, lista de arestas está vazia
 
@@ -89,6 +101,47 @@ void converte()
 
     return;
 }
+*/
+
+int** converte(int** matAdj, int nVertices, int nArestas) {
+    int** arestas = aloca_arestas(nArestas);
+
+    #pragma omp parallel shared(arestas)
+    {
+        int local_k = 0;
+        int* local_buffer = (int*) calloc(2 * nVertices, sizeof(int));
+        if (!local_buffer) {
+            #pragma omp atomic write
+            local_k = -1;
+        }
+
+        #pragma omp for collapse(2) reduction(+: local_k)
+        for (int i = 0; i < nVertices; i++) {
+            for (int j = 0; j < nVertices; j++) {
+                if (matAdj[i][j] != 0) {
+                    if (local_k >= 0) {
+                        local_buffer[local_k * 2] = i;
+                        local_buffer[local_k * 2 + 1] = j;
+                        local_k++;
+                    }
+                }
+            }
+        }
+
+        if (local_k > 0) {
+            #pragma omp critical
+            {
+                memcpy(&arestas[local_k], local_buffer, local_k * 2 * sizeof(int));
+                local_k ++;
+            }
+        }
+
+        free(local_buffer);
+    }
+
+    return arestas;
+}
+
 
 // ----------------------------------------------------------------------------
 void finaliza(char* nome_arq_saida)
@@ -144,17 +197,17 @@ int main(int argc, char** argv)
 	// Determina número de arestas do grafo, a partir da matriz de adjacências
 	conta_arestas();
 
-	//double tfin = omp_get_wtime();
+	double tfin = omp_get_wtime();
 
-	// double tempo1 = tfin - tini;
+	double tempo1 = tfin - tini;
 
 	// Aloca lista de arestas
-	aloca_arestas();
+	int** arestas = aloca_arestas(nArestas);
 
 	tini = omp_get_wtime(); // Medição de tempo exclui entrada, saída, alocação e liberação
 
 	// Obtém lista de arestas do grafo, a partir da matriz de adjacências
-	converte();
+	converte(matAdj, nVertices, nArestas);
 
 	tfin = omp_get_wtime();
 	double tempo2 = tfin - tini;
