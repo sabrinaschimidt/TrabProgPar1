@@ -104,18 +104,18 @@ void conta_arestas()
 */
 
 int** converte(int** matAdj, int nVertices, int nArestas) {
-    int** arestas = aloca_arestas(nArestas);
+    int** arestas = (int**) calloc(nArestas, sizeof(int*));
+	int local_k = 0;
 
     #pragma omp parallel shared(arestas)
     {
-        int local_k = 0;
         int* local_buffer = (int*) calloc(2 * nVertices, sizeof(int));
         if (!local_buffer) {
             #pragma omp atomic write
             local_k = -1;
         }
 
-        #pragma omp for collapse(2) reduction(+: local_k)
+        #pragma omp for reduction(+: local_k)
         for (int i = 0; i < nVertices; i++) {
             for (int j = 0; j < nVertices; j++) {
                 if (matAdj[i][j] != 0) {
@@ -131,8 +131,11 @@ int** converte(int** matAdj, int nVertices, int nArestas) {
         if (local_k > 0) {
             #pragma omp critical
             {
-                memcpy(&arestas[local_k], local_buffer, local_k * 2 * sizeof(int));
-                local_k ++;
+				memcpy(&arestas[local_k], local_buffer, local_k * 2 * sizeof(int));
+
+			/*	memcpy(arestas + local_k, local_buffer, local_k * 2 * sizeof(int)); */
+
+                local_k += 2;
             }
         }
 
