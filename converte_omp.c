@@ -1,3 +1,9 @@
+// Converte grafo direcionado do formato de matriz de adjacências para lista de arestas
+// Compilar com: gcc converte_omp.c -fopenmp -o converte_omp -Wall
+// Executar por linha de comando: ./converte_omp arquivo_entrada arquivo_saída
+// Nomes: Sabrina Renata Gonçalves Schimidt e
+// Claudia Magno Pereira de Brito
+
 
 #include <stdio.h>
 #include <stdlib.h>
